@@ -4,8 +4,9 @@
  * @license MIT
  */
 angular.module('ui.router.stateHelper', [ 'ui.router' ])
-    .provider('stateHelper', ['$stateProvider', function($stateProvider){
+    .provider('stateHelper', ['$stateProvider', '$parseProvider', function($stateProvider, $parseProvider){
         var self = this;
+        var $parse = $parseProvider.$get[1]();
 
         /**
          * Recursively sets the states using $stateProvider.state.
@@ -29,8 +30,9 @@ angular.module('ui.router.stateHelper', [ 'ui.router' ])
             var args = Array.prototype.slice.apply(arguments);
             var options = {
                 keepOriginalNames: false,
-                siblingTraversal: false
-            };  
+                siblingTraversal: false,
+                permits : {}
+            };
 
             if (typeof args[1] === 'boolean') {
                 options.keepOriginalNames = args[1];
@@ -42,6 +44,11 @@ angular.module('ui.router.stateHelper', [ 'ui.router' ])
             if (!options.keepOriginalNames) {
                 fixStateName(state);
             }
+
+            delete state.parent;
+
+            var currentPermitValue = (state.data && state.data.pid) !== undefined ? 
+                                        $parse(['permits', state.data.pid].join('.'))(options) : true;
 
             $stateProvider.state(state);
 
